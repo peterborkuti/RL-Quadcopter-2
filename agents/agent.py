@@ -185,15 +185,26 @@ class DDPG():
         # Algorithm parameters
         self.gamma = 0.99  # discount factor
         self.tau = 0.01  # for soft update of target parameters
+        
+        self.total_reward = 0.0
+        self.count = 0
+        self.best_score = -np.inf
+        self.score = 0
 
     def reset_episode(self):
+        self.total_reward = 0.0
+        self.count = 0
+        
         self.noise.reset()
         state = self.task.reset()
         self.last_state = state
         return state
 
     def step(self, action, reward, next_state, done):
-         # Save experience / reward
+        self.total_reward += reward
+        self.count += 1
+
+        # Save experience / reward
         self.memory.add(self.last_state, action, reward, next_state, done)
 
         # Learn, if enough samples are available in memory
@@ -211,6 +222,10 @@ class DDPG():
         return list(action + self.noise.sample())  # add some noise for exploration
 
     def learn(self, experiences):
+        self.score = self.total_reward
+        if self.score > self.best_score:
+            self.best_score = self.score
+
         """Update policy and value parameters using given batch of experience tuples."""
         # Convert experience tuples to separate arrays for each element (states, actions, rewards, etc.)
         states = np.vstack([e.state for e in experiences if e is not None])
