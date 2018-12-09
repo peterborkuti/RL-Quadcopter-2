@@ -29,7 +29,7 @@ class ReplayBuffer:
         return len(self.memory)
     
 
-from keras import layers, models, optimizers
+from keras import layers, models, optimizers, regularizers
 from keras import backend as K
 
 class Actor:
@@ -61,9 +61,26 @@ class Actor:
         states = layers.Input(shape=(self.state_size,), name='states')
 
         # Add hidden layers
-        net = layers.Dense(units=32, activation='relu')(states)
-        net = layers.Dense(units=64, activation='relu')(net)
-        net = layers.Dense(units=32, activation='relu')(net)
+        net = layers.Dense(units=32, use_bias = False, kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(states)
+        net = layers.BatchNormalization()(net)
+        net = layers.Activation('relu')(net)
+        net = layers.Dropout(0.5)(net)
+        
+        net = layers.Dense(units=64, use_bias = False, kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(net)
+        net = layers.BatchNormalization()(net)
+        net = layers.Activation('relu')(net)
+        net = layers.Dropout(0.5)(net)
+        
+        """
+        net = layers.Dense(units=128, use_bias = False, kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(net)
+        net = layers.BatchNormalization()(net)
+        net = layers.Activation('relu')(net)
+        net = layers.Dropout(0.5)(net)
+        """
+        net = layers.Dense(units=64, use_bias = False, kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(net)
+        net = layers.BatchNormalization()(net)
+        net = layers.Activation('relu')(net)
+        net = layers.Dropout(0.5)(net)
 
         # Try different layer sizes, activations, add batch normalization, regularizers, etc.
 
@@ -117,12 +134,36 @@ class Critic:
         actions = layers.Input(shape=(self.action_size,), name='actions')
 
         # Add hidden layer(s) for state pathway
-        net_states = layers.Dense(units=32, activation='relu')(states)
-        net_states = layers.Dense(units=64, activation='relu')(net_states)
+        net_states = layers.Dense(units=32, use_bias = False)(states)
+        net_states = layers.BatchNormalization()(net_states)
+        net_states = layers.Activation('relu')(net_states)
+        net_states = layers.Dropout(0.5)(net_states)
+        
+        net_states = layers.Dense(units=64, use_bias = False)(net_states)
+        net_states = layers.BatchNormalization()(net_states)
+        net_states = layers.Activation('relu')(net_states)
+        net_states = layers.Dropout(0.5)(net_states)
+        
+        net_states = layers.Dense(units=128, use_bias = False)(net_states)
+        net_states = layers.BatchNormalization()(net_states)
+        net_states = layers.Activation('relu')(net_states)
+        net_states = layers.Dropout(0.5)(net_states)
 
         # Add hidden layer(s) for action pathway
-        net_actions = layers.Dense(units=32, activation='relu')(actions)
-        net_actions = layers.Dense(units=64, activation='relu')(net_actions)
+        net_actions = layers.Dense(units=32, use_bias = False)(actions)
+        net_actions = layers.BatchNormalization()(net_actions)
+        net_actions = layers.Activation('relu')(net_actions)
+        net_actions = layers.Dropout(0.5)(net_actions)
+        
+        net_actions = layers.Dense(units=64, use_bias = False)(net_actions)
+        net_actions = layers.BatchNormalization()(net_actions)
+        net_actions = layers.Activation('relu')(net_actions)
+        net_actions = layers.Dropout(0.5)(net_actions)
+                                          
+        net_actions = layers.Dense(units=128, use_bias = False)(net_actions)
+        net_actions = layers.BatchNormalization()(net_actions)
+        net_actions = layers.Activation('relu')(net_actions)
+        net_actions = layers.Dropout(0.5)(net_actions)
 
         # Try different layer sizes, activations, add batch normalization, regularizers, etc.
 
@@ -173,7 +214,9 @@ class DDPG():
 
         # Noise process
         self.exploration_mu = 0
+        #self.exploration_theta = 0.15
         self.exploration_theta = 0.15
+        #self.exploration_sigma = 0.2
         self.exploration_sigma = 0.2
         self.noise = OUNoise(self.action_size, self.exploration_mu, self.exploration_theta, self.exploration_sigma)
 
@@ -187,6 +230,7 @@ class DDPG():
         self.tau = 0.01  # for soft update of target parameters
         
         self.total_reward = 0.0
+        self.total_reward_before_done = 0.0
         self.count = 0
         self.best_score = -np.inf
         self.score = 0
@@ -201,6 +245,9 @@ class DDPG():
         return state
 
     def step(self, action, reward, next_state, done):
+        if done:
+            self.total_reward_before_done = self.total_reward
+            
         self.total_reward += reward
         self.count += 1
 
