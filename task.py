@@ -2,8 +2,13 @@ import numpy as np
 from physics_sim import PhysicsSim
 np.seterr(all='raise')
 
+def reward_function(pose, target_pos, angular_velo):
+    pose_reward = 1.-.003*(np.abs(pose[:3] - target_pos)).sum()
+    ang_velo = np.abs(angular_velo[:3]).sum()
+    
+    return pose_reward - ang_velo
 
-def reward_function(distance, time, done=False, max_distance=10.0, min_distance=5.0, max_time=5.0):
+def reward_function_v8(distance, time, done=False, max_distance=10.0, min_distance=5.0, max_time=5.0):
     goal_reward = - (distance/(max_distance/2))**0.4 + 2.5
 
     time_reward = time ** 0.2
@@ -231,11 +236,11 @@ class Task():
         #time = (self.runtime - self.sim.time) ** 2 # BAD: its called in every step, not only at the end
         # https://stackoverflow.com/questions/1401712/how-can-the-euclidean-distance-be-calculated-with-numpy
 
-        reward = reward_function(self.agent_distance, self.sim.time, done=done, max_distance=10, min_distance=1, max_time=self.runtime)
+        reward = reward_function(self.sim.pose, self.target_pos, self.sim.angular_v)
         
         self.raw_reward = reward
 
-        return np.tanh(reward)
+        return reward
 
     def step(self, rotor_speeds):
         """Uses action to obtain next state, reward, done."""
