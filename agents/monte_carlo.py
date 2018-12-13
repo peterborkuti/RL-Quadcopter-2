@@ -1,10 +1,28 @@
 import numpy as np
 from task import Task
 
-class PolicySearch_Agent():
+def sigmoid(x):
+    """
+    Calculate sigmoid
+    """
+    return 1/(1+np.exp(-x))
+
+"""
+Monte Carlo with Linear Function Approximation
+
+Nearly the same as PolicySearch, but uses error gradient
+to update the weights
+"""
+class MonteCarlo_Agent():
     def __init__(self, task):
         # Task (environment) information
         self.task = task
+        
+        # add for monte carlo
+        self.episode = [] # array of (state,action,reward) triplets
+        self.last_action = None # for saving into an episode step
+        self.last_state = None # for saving into an episode step
+        
         self.state_size = task.state_size
         self.action_size = task.action_size
         self.action_low = task.action_low
@@ -26,14 +44,21 @@ class PolicySearch_Agent():
     def reset_episode(self):
         self.total_reward = 0.0
         self.count = 0
+        
+        # added for Monte Carlo
+        self.episode = []
+        self.last_state = None
+        self.last_action = None
+        
         state = self.task.reset()
         return state
 
     def step(self, reward, done):
         # Save experience / reward
-        print("reward:", reward)
         self.total_reward += reward
         self.count += 1
+        
+        self.episode.append((self.last_state, self.last_action, reward))
 
         # Learn, if at end of episode
         if done:
@@ -41,7 +66,13 @@ class PolicySearch_Agent():
 
     def act(self, state):
         # Choose action based on given state and policy
-        action = np.dot(state, self.w)  # simple linear policy
+        out = sigmoid(np.dot(state, self.w))
+        action = np.interp(out, [0,1], [self.action_low, self.action_high])
+
+        # save state, action
+        self.last_state = state
+        self.last_action = action
+
         return action
 
     def learn(self):

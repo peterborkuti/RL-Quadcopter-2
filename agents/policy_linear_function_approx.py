@@ -1,7 +1,12 @@
 import numpy as np
 from task import Task
 
-class PolicySearch_Agent():
+"""
+Same as PolicySearch but uses error gradient
+for improving the weights
+"""
+
+class PolicyLinFApprox_Agent():
     def __init__(self, task):
         # Task (environment) information
         self.task = task

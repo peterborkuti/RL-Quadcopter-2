@@ -1,7 +1,8 @@
 import numpy as np
 from task import Task
+import random
 
-class PolicySearch_Agent():
+class BPRandom_Agent():
     def __init__(self, task):
         # Task (environment) information
         self.task = task
@@ -31,7 +32,6 @@ class PolicySearch_Agent():
 
     def step(self, reward, done):
         # Save experience / reward
-        print("reward:", reward)
         self.total_reward += reward
         self.count += 1
 
@@ -41,8 +41,10 @@ class PolicySearch_Agent():
 
     def act(self, state):
         # Choose action based on given state and policy
-        action = np.dot(state, self.w)  # simple linear policy
-        return action
+        #action = np.dot(state, self.w)  # simple linear policy
+        new_thrust = random.gauss(450., 25.)
+        return [new_thrust + random.gauss(0., 1.) for x in range(4)]
+        #return action
 
     def learn(self):
         # Learn by random policy search, using a reward-based score

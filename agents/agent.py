@@ -31,6 +31,7 @@ class ReplayBuffer:
 
 from keras import layers, models, optimizers, regularizers
 from keras import backend as K
+import keras
 
 class Actor:
     """Actor (Policy) Model."""
@@ -61,31 +62,30 @@ class Actor:
         states = layers.Input(shape=(self.state_size,), name='states')
 
         # Add hidden layers
-        net = layers.Dense(units=32, use_bias = False, kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(states)
+        net = layers.Dense(units=32, use_bias = False, kernel_initializer='glorot_uniform',kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(states)
         net = layers.BatchNormalization()(net)
         net = layers.Activation('relu')(net)
-        net = layers.Dropout(0.5)(net)
+        #net = layers.Dropout(0.5)(net)
         
-        net = layers.Dense(units=64, use_bias = False, kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(net)
+        net = layers.Dense(units=64, use_bias = False, kernel_initializer='glorot_uniform',kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(net)
         net = layers.BatchNormalization()(net)
         net = layers.Activation('relu')(net)
-        net = layers.Dropout(0.5)(net)
+        #net = layers.Dropout(0.5)(net)
         
-        """
-        net = layers.Dense(units=128, use_bias = False, kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(net)
+        net = layers.Dense(units=128, use_bias = False, kernel_initializer='glorot_uniform',kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(net)
         net = layers.BatchNormalization()(net)
         net = layers.Activation('relu')(net)
-        net = layers.Dropout(0.5)(net)
-        """
-        net = layers.Dense(units=64, use_bias = False, kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(net)
+        #net = layers.Dropout(0.5)(net)
+      
+        net = layers.Dense(units=64, use_bias = False, kernel_initializer='glorot_uniform',kernel_regularizer = regularizers.l2(0.01), activity_regularizer = regularizers.l1(0.01))(net)
         net = layers.BatchNormalization()(net)
         net = layers.Activation('relu')(net)
-        net = layers.Dropout(0.5)(net)
+        #net = layers.Dropout(0.5)(net)
 
         # Try different layer sizes, activations, add batch normalization, regularizers, etc.
 
         # Add final output layer with sigmoid activation
-        raw_actions = layers.Dense(units=self.action_size, activation='sigmoid',
+        raw_actions = layers.Dense(units=self.action_size, kernel_initializer='glorot_uniform',activation='sigmoid',
             name='raw_actions')(net)
 
         # Scale [0, 1] output for each action dimension to proper range
@@ -134,36 +134,36 @@ class Critic:
         actions = layers.Input(shape=(self.action_size,), name='actions')
 
         # Add hidden layer(s) for state pathway
-        net_states = layers.Dense(units=32, use_bias = False)(states)
+        net_states = layers.Dense(units=32, use_bias = False,kernel_initializer='glorot_uniform',)(states)
         net_states = layers.BatchNormalization()(net_states)
         net_states = layers.Activation('relu')(net_states)
-        net_states = layers.Dropout(0.5)(net_states)
+        #net_states = layers.Dropout(0.5)(net_states)
         
-        net_states = layers.Dense(units=64, use_bias = False)(net_states)
+        net_states = layers.Dense(units=64, use_bias = False,kernel_initializer='glorot_uniform',)(net_states)
         net_states = layers.BatchNormalization()(net_states)
         net_states = layers.Activation('relu')(net_states)
-        net_states = layers.Dropout(0.5)(net_states)
+        #net_states = layers.Dropout(0.5)(net_states)
         
-        net_states = layers.Dense(units=128, use_bias = False)(net_states)
+        net_states = layers.Dense(units=128, use_bias = False,kernel_initializer='glorot_uniform',)(net_states)
         net_states = layers.BatchNormalization()(net_states)
         net_states = layers.Activation('relu')(net_states)
-        net_states = layers.Dropout(0.5)(net_states)
+        #net_states = layers.Dropout(0.5)(net_states)
 
         # Add hidden layer(s) for action pathway
-        net_actions = layers.Dense(units=32, use_bias = False)(actions)
+        net_actions = layers.Dense(units=32, use_bias = False,kernel_initializer='glorot_uniform',)(actions)
         net_actions = layers.BatchNormalization()(net_actions)
         net_actions = layers.Activation('relu')(net_actions)
-        net_actions = layers.Dropout(0.5)(net_actions)
+        #net_actions = layers.Dropout(0.5)(net_actions)
         
-        net_actions = layers.Dense(units=64, use_bias = False)(net_actions)
+        net_actions = layers.Dense(units=64, use_bias = False,kernel_initializer='glorot_uniform',)(net_actions)
         net_actions = layers.BatchNormalization()(net_actions)
         net_actions = layers.Activation('relu')(net_actions)
-        net_actions = layers.Dropout(0.5)(net_actions)
+        #net_actions = layers.Dropout(0.5)(net_actions)
                                           
-        net_actions = layers.Dense(units=128, use_bias = False)(net_actions)
+        net_actions = layers.Dense(units=128, use_bias = False,kernel_initializer='glorot_uniform',)(net_actions)
         net_actions = layers.BatchNormalization()(net_actions)
         net_actions = layers.Activation('relu')(net_actions)
-        net_actions = layers.Dropout(0.5)(net_actions)
+        #net_actions = layers.Dropout(0.5)(net_actions)
 
         # Try different layer sizes, activations, add batch normalization, regularizers, etc.
 
@@ -174,7 +174,7 @@ class Critic:
         # Add more layers to the combined network if needed
 
         # Add final output layer to prduce action values (Q values)
-        Q_values = layers.Dense(units=1, name='q_values')(net)
+        Q_values = layers.Dense(units=1, kernel_initializer='glorot_uniform', name='q_values')(net)
 
         # Create Keras model
         self.model = models.Model(inputs=[states, actions], outputs=Q_values)
@@ -211,6 +211,21 @@ class DDPG():
         # Initialize target model parameters with local model parameters
         self.critic_target.model.set_weights(self.critic_local.model.get_weights())
         self.actor_target.model.set_weights(self.actor_local.model.get_weights())
+        
+        #Tensorboard
+        self.tb_callback_c = keras.callbacks.TensorBoard(
+            log_dir='./critic',
+            histogram_freq=0,
+            write_graph=True
+        )
+        self.tb_callback_c.set_model(self.critic_target.model)
+        
+        self.tb_callback_a = keras.callbacks.TensorBoard(
+            log_dir='./actor',
+            histogram_freq=0,
+            write_graph=True
+        )
+        self.tb_callback_a.set_model(self.actor_target.model)
 
         # Noise process
         self.exploration_mu = 0
@@ -230,7 +245,6 @@ class DDPG():
         self.tau = 0.01  # for soft update of target parameters
         
         self.total_reward = 0.0
-        self.total_reward_before_done = 0.0
         self.count = 0
         self.best_score = -np.inf
         self.score = 0
@@ -245,14 +259,17 @@ class DDPG():
         return state
 
     def step(self, action, reward, next_state, done):
-        if done:
-            self.total_reward_before_done = self.total_reward
-            
         self.total_reward += reward
         self.count += 1
 
         # Save experience / reward
         self.memory.add(self.last_state, action, reward, next_state, done)
+        
+        if done:
+            self.score = self.total_reward
+            if self.score > self.best_score:
+                self.best_score = self.score
+                self.saveModels()
 
         # Learn, if enough samples are available in memory
         if len(self.memory) > self.batch_size:
@@ -261,7 +278,7 @@ class DDPG():
 
         # Roll over last state and action
         self.last_state = next_state
-
+        
     def act(self, state):
         """Returns actions for given state(s) as per current policy."""
         state = np.reshape(state, [-1, self.state_size])
@@ -269,10 +286,6 @@ class DDPG():
         return list(action + self.noise.sample())  # add some noise for exploration
 
     def learn(self, experiences):
-        self.score = self.total_reward
-        if self.score > self.best_score:
-            self.best_score = self.score
-
         """Update policy and value parameters using given batch of experience tuples."""
         # Convert experience tuples to separate arrays for each element (states, actions, rewards, etc.)
         states = np.vstack([e.state for e in experiences if e is not None])
@@ -307,6 +320,26 @@ class DDPG():
 
         new_weights = self.tau * local_weights + (1 - self.tau) * target_weights
         target_model.set_weights(new_weights)
+     
+    def saveModels(self):
+        file = open('best_score_for_model_weights.txt','w')
+        file.write(str(self.best_score))
+        file.close()
+
+        self.critic_local.model.save_weights('critic_local_model_weights.h5')
+        self.actor_local.model.save_weights('actor_local_model_weights.h5')
+        self.critic_target.model.save_weights('critic_target_model_weights.h5')
+        self.actor_target.model.save_weights('actor_target_model_weights.h5')
+        
+    def loadModels(self):
+        file = open('best_score_for_model_weights.txt','r')
+        self.best_score = float(file.readline())
+        file.close()
+
+        self.critic_local.model.load_weights('critic_local_model_weights.h5')
+        self.actor_local.model.load_weights('actor_local_model_weights.h5')
+        self.critic_target.model.load_weights('critic_target_model_weights.h5')
+        self.actor_target.model.load_weights('actor_target_model_weights.h5')        
         
 import numpy as np
 import copy

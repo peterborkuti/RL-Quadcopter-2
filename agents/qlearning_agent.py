@@ -1,7 +1,8 @@
 import numpy as np
 from task import Task
+from qnetwork import QNetwork
 
-class PolicySearch_Agent():
+class QLearning_Agent():
     def __init__(self, task):
         # Task (environment) information
         self.task = task
@@ -19,6 +20,11 @@ class PolicySearch_Agent():
         self.best_w = None
         self.best_score = -np.inf
         self.noise_scale = 0.1
+        
+        self.learning_rate = 0.0001
+        self.hidden_size = 64
+        tf.reset_default_graph()
+        self.mainQN = QNetwork(name='main', hidden_size=self.hidden_size, learning_rate=self.learning_rate)
 
         # Episode variables
         self.reset_episode()
@@ -31,7 +37,6 @@ class PolicySearch_Agent():
 
     def step(self, reward, done):
         # Save experience / reward
-        print("reward:", reward)
         self.total_reward += reward
         self.count += 1
 
@@ -41,7 +46,10 @@ class PolicySearch_Agent():
 
     def act(self, state):
         # Choose action based on given state and policy
-        action = np.dot(state, self.w)  # simple linear policy
+        feed = {self.mainQN.inputs_: state.reshape((1, *state.shape))}
+        Qs = sess.run(self.mainQN.output, feed_dict=feed)
+        action = np.argmax(Qs) # Not good!!
+        #action = np.dot(state, self.w)  # simple linear policy
         return action
 
     def learn(self):
